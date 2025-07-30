@@ -7,33 +7,56 @@ function App() {
   const [scanMode, setScanMode] = useState('out');
   const [offCampusStudents, setOffCampusStudents] = useState([]);
   const [log, setLog] = useState([]);
+  const [message, setMessage] = useState('');
 
   const handleIdSubmit = (idOverride) => {
     const id = idOverride || studentId.trim();
     if (!id) return;
 
-    const timestamp = new Date().toLocaleString();
+    const timestamp = new Date();
     let updatedOffCampus = [...offCampusStudents];
     let updatedLog = [...log];
+    let duplicate = false;
 
     if (scanMode === 'out') {
-      if (!offCampusStudents.includes(id)) {
-        updatedOffCampus.push(id);
-        updatedLog.push({ id, time: timestamp, action: 'Checked Out' });
+      if (!offCampusStudents.find(entry => entry.id === id)) {
+        updatedOffCampus.push({ id, outTime: timestamp });
+        updatedLog.push({ id, time: timestamp.toLocaleString(), action: 'Checked Out' });
+        setMessage(`${id} checked out at ${timestamp.toLocaleString()}`);
+      } else {
+        duplicate = true;
       }
     } else {
-      updatedOffCampus = updatedOffCampus.filter(sid => sid !== id);
-      updatedLog.push({ id, time: timestamp, action: 'Checked In' });
+      const studentEntry = offCampusStudents.find(entry => entry.id === id);
+      if (studentEntry) {
+        const returnTime = timestamp;
+        const durationMs = returnTime - new Date(studentEntry.outTime);
+        const minutes = Math.floor((durationMs / 1000 / 60) % 60);
+        const hours = Math.floor(durationMs / 1000 / 60 / 60);
+        const duration = `${hours}hr${minutes.toString().padStart(2, '0')}min`;
+
+        updatedOffCampus = updatedOffCampus.filter(entry => entry.id !== id);
+        updatedLog.push({ id, time: returnTime.toLocaleString(), action: 'Checked In', duration });
+        setMessage(`${id} checked in at ${returnTime.toLocaleString()}`);
+      } else {
+        duplicate = true;
+      }
+    }
+
+    if (duplicate) {
+      setMessage(`Duplicate scan detected: ${id} already ${scanMode === 'out' ? 'off campus' : 'on campus'}`);
     }
 
     setOffCampusStudents(updatedOffCampus);
     setLog(updatedLog);
     setStudentId('');
+
+    setTimeout(() => setMessage(''), 3000);
   };
 
   const exportCSV = () => {
-    const header = 'Student ID,Time,Action\n';
-    const rows = log.map(entry => `${entry.id},${entry.time},${entry.action}`).join('\n');
+    const header = 'Student ID,Time,Action,Duration\n';
+    const rows = log.map(entry => `${entry.id},${entry.time},${entry.action},${entry.duration || ''}`).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, 'daily_log.csv');
   };
@@ -74,12 +97,48 @@ function App() {
         onKeyDown={e => e.key === 'Enter' && handleIdSubmit()}
       />
       <button onClick={() => handleIdSubmit()}>Submit ID</button>
+      {message && <div style={{ marginTop: '10px', color: 'blue' }}>{message}</div>}
       <h2>Currently Off Campus</h2>
-      <ul>
-        {offCampusStudents.map(id => (
-          <li key={id}>{id}</li>
-        ))}
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Checked Out</th>
+            <th>Returned</th>
+            <th>Return Time</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {offCampusStudents.map(({ id, outTime }) => {
+            return (
+              <tr key={id}>
+                <td>{id}</td>
+                <td>{new Date(outTime).toLocaleString()}</td>
+                <td>❌</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+            );
+          })}
+          {log.filter(entry => entry.action === 'Checked In').map((entry, idx) => {
+            const outLog = log.find(l => l.id === entry.id && l.action === 'Checked Out');
+            const durationParts = entry.duration.match(/(\d+)hr(\d+)min/);
+            const hours = parseInt(durationParts?.[1] || '0', 10);
+            const durationStyle = hours >= 1 ? { backgroundColor: 'red', color: 'white' } : {};
+
+            return (
+              <tr key={`in-${idx}`}>
+                <td>{entry.id}</td>
+                <td>{outLog?.time || '-'}</td>
+                <td>✅</td>
+                <td>{entry.time}</td>
+                <td style={durationStyle}>{entry.duration}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
       <button onClick={exportCSV}>Export Daily Log (CSV)</button>
     </div>
   );
