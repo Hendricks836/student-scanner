@@ -64,13 +64,13 @@ function App() {
     const header = 'Student ID,Check Out Time,Returned,Return Time,Duration\n';
     const rows = log.map(entry => {
       if (entry.action === 'Checked In') {
-        const returned = '✅';
+        const returned = 'Yes';
         const returnTime = entry.time;
         const outTime = entry.outTime || '';
         const duration = entry.duration || '';
         return `${entry.id},${outTime},${returned},${returnTime},${duration}`;
       } else {
-        return `${entry.id},${entry.time},❌,,`;
+        return `${entry.id},${entry.time},No,,`;
       }
     }).join('\n');
 
@@ -143,7 +143,7 @@ function App() {
             <tr key={id}>
               <td>{id}</td>
               <td>{new Date(outTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
-              <td>❌</td>
+              <td>No</td>
               <td>-</td>
               <td>-</td>
             </tr>
@@ -157,7 +157,7 @@ function App() {
               <tr key={`in-${idx}`}>
                 <td>{entry.id}</td>
                 <td>{entry.outTime || outLog?.time || '-'}</td>
-                <td>✅</td>
+                <td>Yes</td>
                 <td>{entry.time}</td>
                 <td style={durationStyle}>{entry.duration}</td>
               </tr>
