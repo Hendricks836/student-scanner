@@ -1,56 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { saveAs } from 'file-saver';
-import Quagga from 'quagga';
 
 function App() {
   const [studentId, setStudentId] = useState('');
   const [scanMode, setScanMode] = useState('out');
   const [offCampusStudents, setOffCampusStudents] = useState([]);
   const [log, setLog] = useState([]);
-  const beepRef = useRef(null);
-
-  useEffect(() => {
-    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-      Quagga.init({
-        inputStream: {
-          name: 'Live',
-          type: 'LiveStream',
-          target: document.querySelector('#scanner-container'),
-          constraints: {
-            width: 640,
-            height: 480,
-            facingMode: 'environment'
-          }
-        },
-        decoder: {
-          readers: ['code_128_reader']
-        }
-      }, (err) => {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        Quagga.start();
-      });
-
-      Quagga.onDetected((data) => {
-        if (data && data.codeResult && data.codeResult.code) {
-          handleIdSubmit(data.codeResult.code);
-        }
-      });
-
-      return () => Quagga.stop();
-    }
-  }, []);
 
   const handleIdSubmit = (idOverride) => {
     const id = idOverride || studentId.trim();
     if (!id) return;
-
-    if (beepRef.current) {
-      beepRef.current.play();
-    }
 
     const timestamp = new Date().toLocaleString();
     let updatedOffCampus = [...offCampusStudents];
@@ -114,7 +74,6 @@ function App() {
         onKeyDown={e => e.key === 'Enter' && handleIdSubmit()}
       />
       <button onClick={() => handleIdSubmit()}>Submit ID</button>
-      <div id="scanner-container" style={{ marginTop: '20px' }}></div>
       <h2>Currently Off Campus</h2>
       <ul>
         {offCampusStudents.map(id => (
@@ -122,7 +81,6 @@ function App() {
         ))}
       </ul>
       <button onClick={exportCSV}>Export Daily Log (CSV)</button>
-      <audio ref={beepRef} src="https://www.soundjay.com/button/sounds/beep-07.mp3" preload="auto"></audio>
     </div>
   );
 }
