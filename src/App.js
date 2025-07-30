@@ -99,7 +99,7 @@ function App() {
       <button onClick={() => handleIdSubmit()}>Submit ID</button>
       {message && <div style={{ marginTop: '10px', color: 'blue' }}>{message}</div>}
       <h2>Currently Off Campus</h2>
-      <table>
+      <table className="log-table">
         <thead>
           <tr>
             <th>Student ID</th>
