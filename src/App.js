@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { saveAs } from 'file-saver';
 
 function App() {
   const [studentId, setStudentId] = useState('');
   const [scanMode, setScanMode] = useState('out');
-  const [offCampusStudents, setOffCampusStudents] = useState([]);
-  const [log, setLog] = useState([]);
+  const [offCampusStudents, setOffCampusStudents] = useState(() => {
+    const saved = localStorage.getItem('offCampusStudents');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [log, setLog] = useState(() => {
+    const saved = localStorage.getItem('log');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('offCampusStudents', JSON.stringify(offCampusStudents));
+  }, [offCampusStudents]);
+
+  useEffect(() => {
+    localStorage.setItem('log', JSON.stringify(log));
+  }, [log]);
 
   const handleIdSubmit = (idOverride) => {
     const id = idOverride || studentId.trim();
@@ -70,8 +84,16 @@ function App() {
       }
     });
 
+    const includedIds = new Set();
+
     const rows = log
-      .filter(entry => entry.action === 'Checked In' || (entry.action === 'Checked Out' && !log.some(e => e.id === entry.id && e.action === 'Checked In')))
+      .filter(entry => {
+        if (entry.action === 'Checked In') {
+          includedIds.add(entry.id);
+          return true;
+        }
+        return !includedIds.has(entry.id);
+      })
       .map(entry => {
         if (entry.action === 'Checked In') {
           const returned = 'Yes';
