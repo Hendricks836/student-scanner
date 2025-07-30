@@ -150,14 +150,17 @@ function App() {
           </tr>
         </tbody>
       </table>
-      <input
-        type="text"
-        value={studentId}
-        onChange={e => setStudentId(e.target.value)}
-        placeholder="Scan or Enter Student ID"
-        onKeyDown={e => e.key === 'Enter' && handleIdSubmit()}
-      />
-      <button onClick={() => handleIdSubmit()}>Submit ID</button>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+        <input
+          type="text"
+          value={studentId}
+          onChange={e => setStudentId(e.target.value)}
+          placeholder="Scan or Enter Student ID"
+          onKeyDown={e => e.key === 'Enter' && handleIdSubmit()}
+          style={{ marginRight: '10px' }}
+        />
+        <button onClick={() => handleIdSubmit()}>Submit ID</button>
+      </div>
       {message && <div style={{ marginTop: '10px', color: 'blue' }}>{message}</div>}
       <table className="log-table">
         <thead>
