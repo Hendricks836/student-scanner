@@ -62,17 +62,27 @@ function App() {
 
   const exportCSV = () => {
     const header = 'Student ID,Check Out Time,Returned,Return Time,Duration\n';
-    const rows = log.map(entry => {
-      if (entry.action === 'Checked In') {
-        const returned = 'Yes';
-        const returnTime = entry.time;
-        const outTime = entry.outTime || '';
-        const duration = entry.duration || '';
-        return `${entry.id},${outTime},${returned},${returnTime},${duration}`;
-      } else {
-        return `${entry.id},${entry.time},No,,`;
+
+    const checkedOutMap = {};
+    log.forEach(entry => {
+      if (entry.action === 'Checked Out') {
+        checkedOutMap[entry.id] = entry.time;
       }
-    }).join('\n');
+    });
+
+    const rows = log
+      .filter(entry => entry.action === 'Checked In' || (entry.action === 'Checked Out' && !log.some(e => e.id === entry.id && e.action === 'Checked In')))
+      .map(entry => {
+        if (entry.action === 'Checked In') {
+          const returned = 'Yes';
+          const returnTime = entry.time;
+          const outTime = entry.outTime || checkedOutMap[entry.id] || '';
+          const duration = entry.duration || '';
+          return `${entry.id},${outTime},${returned},${returnTime},${duration}`;
+        } else {
+          return `${entry.id},${entry.time},No,,`;
+        }
+      }).join('\n');
 
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, 'daily_log.csv');
@@ -127,7 +137,6 @@ function App() {
       />
       <button onClick={() => handleIdSubmit()}>Submit ID</button>
       {message && <div style={{ marginTop: '10px', color: 'blue' }}>{message}</div>}
-      <h2>Currently Off Campus</h2>
       <table className="log-table">
         <thead>
           <tr>
