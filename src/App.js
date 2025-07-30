@@ -77,34 +77,27 @@ function App() {
   const exportCSV = () => {
     const header = 'Student ID,Check Out Time,Returned,Return Time,Duration\n';
 
-    const checkedOutMap = {};
+    const pairedLog = {};
     log.forEach(entry => {
       if (entry.action === 'Checked Out') {
-        checkedOutMap[entry.id] = entry.time;
+        pairedLog[entry.id] = { ...pairedLog[entry.id], outTime: entry.time };
+      } else if (entry.action === 'Checked In') {
+        pairedLog[entry.id] = {
+          ...pairedLog[entry.id],
+          returnTime: entry.time,
+          duration: entry.duration,
+          returned: 'Yes'
+        };
       }
     });
 
-    const includedIds = new Set();
-
-    const rows = log
-      .filter(entry => {
-        if (entry.action === 'Checked In') {
-          includedIds.add(entry.id);
-          return true;
-        }
-        return !includedIds.has(entry.id);
-      })
-      .map(entry => {
-        if (entry.action === 'Checked In') {
-          const returned = 'Yes';
-          const returnTime = entry.time;
-          const outTime = entry.outTime || checkedOutMap[entry.id] || '';
-          const duration = entry.duration || '';
-          return `${entry.id},${outTime},${returned},${returnTime},${duration}`;
-        } else {
-          return `${entry.id},${entry.time},No,,`;
-        }
-      }).join('\n');
+    const rows = Object.entries(pairedLog).map(([id, data]) => {
+      const outTime = data.outTime || '';
+      const returned = data.returned || 'No';
+      const returnTime = data.returnTime || '';
+      const duration = data.duration || '';
+      return `${id},${outTime},${returned},${returnTime},${duration}`;
+    }).join('\n');
 
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, 'daily_log.csv');
