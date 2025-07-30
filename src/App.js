@@ -21,8 +21,8 @@ function App() {
     if (scanMode === 'out') {
       if (!offCampusStudents.find(entry => entry.id === id)) {
         updatedOffCampus.push({ id, outTime: timestamp });
-        updatedLog.push({ id, time: timestamp.toLocaleString(), action: 'Checked Out' });
-        setMessage(`${id} checked out at ${timestamp.toLocaleString()}`);
+        updatedLog.push({ id, time: timestamp.toLocaleTimeString(), action: 'Checked Out' });
+        setMessage(`${id} checked out at ${timestamp.toLocaleTimeString()}`);
       } else {
         duplicate = true;
       }
@@ -36,8 +36,14 @@ function App() {
         const duration = `${hours}hr${minutes.toString().padStart(2, '0')}min`;
 
         updatedOffCampus = updatedOffCampus.filter(entry => entry.id !== id);
-        updatedLog.push({ id, time: returnTime.toLocaleString(), action: 'Checked In', duration });
-        setMessage(`${id} checked in at ${returnTime.toLocaleString()}`);
+        updatedLog.push({
+          id,
+          time: returnTime.toLocaleTimeString(),
+          action: 'Checked In',
+          duration,
+          outTime: new Date(studentEntry.outTime).toLocaleTimeString()
+        });
+        setMessage(`${id} checked in at ${returnTime.toLocaleTimeString()}`);
       } else {
         duplicate = true;
       }
@@ -55,8 +61,19 @@ function App() {
   };
 
   const exportCSV = () => {
-    const header = 'Student ID,Time,Action,Duration\n';
-    const rows = log.map(entry => `${entry.id},${entry.time},${entry.action},${entry.duration || ''}`).join('\n');
+    const header = 'Student ID,Check Out Time,Returned,Return Time,Duration\n';
+    const rows = log.map(entry => {
+      if (entry.action === 'Checked In') {
+        const returned = '✅';
+        const returnTime = entry.time;
+        const outTime = entry.outTime || '';
+        const duration = entry.duration || '';
+        return `${entry.id},${outTime},${returned},${returnTime},${duration}`;
+      } else {
+        return `${entry.id},${entry.time},❌,,`;
+      }
+    }).join('\n');
+
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, 'daily_log.csv');
   };
@@ -110,27 +127,24 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {offCampusStudents.map(({ id, outTime }) => {
-            return (
-              <tr key={id}>
-                <td>{id}</td>
-                <td>{new Date(outTime).toLocaleString()}</td>
-                <td>❌</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-            );
-          })}
+          {offCampusStudents.map(({ id, outTime }) => (
+            <tr key={id}>
+              <td>{id}</td>
+              <td>{new Date(outTime).toLocaleTimeString()}</td>
+              <td>❌</td>
+              <td>-</td>
+              <td>-</td>
+            </tr>
+          ))}
           {log.filter(entry => entry.action === 'Checked In').map((entry, idx) => {
             const outLog = log.find(l => l.id === entry.id && l.action === 'Checked Out');
-            const durationParts = entry.duration.match(/(\d+)hr(\d+)min/);
+            const durationParts = entry.duration?.match(/(\d+)hr(\d+)min/);
             const hours = parseInt(durationParts?.[1] || '0', 10);
             const durationStyle = hours >= 1 ? { backgroundColor: 'red', color: 'white' } : {};
-
             return (
               <tr key={`in-${idx}`}>
                 <td>{entry.id}</td>
-                <td>{outLog?.time || '-'}</td>
+                <td>{entry.outTime || outLog?.time || '-'}</td>
                 <td>✅</td>
                 <td>{entry.time}</td>
                 <td style={durationStyle}>{entry.duration}</td>
