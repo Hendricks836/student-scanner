@@ -124,9 +124,8 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Lunch Period Scanner</h1>
-      <div style={{ fontWeight: 'bold' }}>Scan Mode:</div>
-      <table style={{ marginBottom: '10px' }}>
+      <h1>Door 32 Check Out/In</h1>
+      <table style={{ marginBottom: '10px', marginLeft: 'auto', marginRight: 'auto', width: 'fit-content' }}>
         <tbody>
           <tr>
             <td>Check Students Out</td>
