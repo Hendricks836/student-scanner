@@ -78,6 +78,18 @@ function App() {
     saveAs(blob, 'daily_log.csv');
   };
 
+  const resetLog = () => {
+    const confirmed = window.confirm("Are you sure you want to reset the log? This action cannot be undone.");
+    if (!confirmed) return;
+
+    setStudentId('');
+    setScanMode('out');
+    setOffCampusStudents([]);
+    setLog([]);
+    setMessage('Log has been reset.');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
   return (
     <div className="App">
       <h1>Lunch Period Scanner</h1>
@@ -154,6 +166,7 @@ function App() {
         </tbody>
       </table>
       <button onClick={exportCSV}>Export Daily Log (CSV)</button>
+      <button onClick={resetLog} style={{ marginLeft: '10px' }}>Reset Log</button>
     </div>
   );
 }
