@@ -21,8 +21,8 @@ function App() {
     if (scanMode === 'out') {
       if (!offCampusStudents.find(entry => entry.id === id)) {
         updatedOffCampus.push({ id, outTime: timestamp });
-        updatedLog.push({ id, time: timestamp.toLocaleTimeString(), action: 'Checked Out' });
-        setMessage(`${id} checked out at ${timestamp.toLocaleTimeString()}`);
+        updatedLog.push({ id, time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), action: 'Checked Out' });
+        setMessage(`${id} checked out at ${timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
       } else {
         duplicate = true;
       }
@@ -38,12 +38,12 @@ function App() {
         updatedOffCampus = updatedOffCampus.filter(entry => entry.id !== id);
         updatedLog.push({
           id,
-          time: returnTime.toLocaleTimeString(),
+          time: returnTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
           action: 'Checked In',
           duration,
-          outTime: new Date(studentEntry.outTime).toLocaleTimeString()
+          outTime: new Date(studentEntry.outTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
         });
-        setMessage(`${id} checked in at ${returnTime.toLocaleTimeString()}`);
+        setMessage(`${id} checked in at ${returnTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
       } else {
         duplicate = true;
       }
@@ -130,7 +130,7 @@ function App() {
           {offCampusStudents.map(({ id, outTime }) => (
             <tr key={id}>
               <td>{id}</td>
-              <td>{new Date(outTime).toLocaleTimeString()}</td>
+              <td>{new Date(outTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
               <td>❌</td>
               <td>-</td>
               <td>-</td>
